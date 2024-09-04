@@ -1,4 +1,4 @@
-use std::{alloc::Layout, mem::size_of, ptr::null_mut, slice::from_raw_parts};
+use core::{alloc::Layout, mem::size_of, ptr::null_mut, slice::from_raw_parts};
 
 use crate::{
     account_info::{Account, AccountInfo, MAX_PERMITTED_DATA_INCREASE},
@@ -23,7 +23,7 @@ pub const HEAP_LENGTH: usize = 32 * 1024;
 /// [maximum number of accounts]: https://github.com/anza-xyz/agave/blob/2e6ca8c1f62db62c1db7f19c9962d4db43d0d550/runtime/src/bank.rs#L3209-L3221
 pub const MAX_TX_ACCOUNTS: usize = 128;
 
-/// `assert_eq(std::mem::align_of::<u128>(), 8)` is true for BPF but not
+/// `assert_eq(core::mem::align_of::<u128>(), 8)` is true for BPF but not
 /// for some host machines.
 pub const BPF_ALIGN_OF_U128: usize = 8;
 
@@ -107,8 +107,8 @@ macro_rules! entrypoint {
     ( $process_instruction:ident, $maximum:expr ) => {
         #[no_mangle]
         pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
-            const UNINIT: std::mem::MaybeUninit<$crate::account_info::AccountInfo> =
-                std::mem::MaybeUninit::<$crate::account_info::AccountInfo>::uninit();
+            const UNINIT: core::mem::MaybeUninit<$crate::account_info::AccountInfo> =
+                core::mem::MaybeUninit::<$crate::account_info::AccountInfo>::uninit();
             // create an array of uninitialized account infos; it is safe to `assume_init` since
             // we are claiming that the array of `MaybeUninit` is initialized and `MaybeUninit` do
             // not require initialization
@@ -121,7 +121,7 @@ macro_rules! entrypoint {
             // they are initialized so we cast the pointer to a slice of `[AccountInfo]`
             match $process_instruction(
                 &program_id,
-                std::slice::from_raw_parts(accounts.as_ptr() as _, count),
+                core::slice::from_raw_parts(accounts.as_ptr() as _, count),
                 &instruction_data,
             ) {
                 Ok(()) => $crate::entrypoint::SUCCESS,
@@ -142,7 +142,7 @@ macro_rules! entrypoint {
 #[inline(always)]
 pub unsafe fn deserialize<'a, const MAX_ACCOUNTS: usize>(
     input: *mut u8,
-    accounts: &mut [std::mem::MaybeUninit<AccountInfo>],
+    accounts: &mut [core::mem::MaybeUninit<AccountInfo>],
 ) -> (&'a Pubkey, usize, &'a [u8]) {
     let mut offset: usize = 0;
 
@@ -156,18 +156,18 @@ pub unsafe fn deserialize<'a, const MAX_ACCOUNTS: usize>(
         MAX_ACCOUNTS
     };
 
-    offset += std::mem::size_of::<u64>();
+    offset += core::mem::size_of::<u64>();
 
     for i in 0..count {
         let duplicate_info = *(input.add(offset) as *const u8);
         if duplicate_info == NON_DUP_MARKER {
             let account_info: *mut Account = input.add(offset) as *mut _;
 
-            offset += std::mem::size_of::<Account>();
+            offset += core::mem::size_of::<Account>();
             offset += (*account_info).data_len as usize;
             offset += MAX_PERMITTED_DATA_INCREASE;
             offset += (offset as *const u8).align_offset(BPF_ALIGN_OF_U128);
-            offset += std::mem::size_of::<u64>(); // MAGNETAR FIELDS: ignore rent epoch
+            offset += core::mem::size_of::<u64>(); // MAGNETAR FIELDS: ignore rent epoch
 
             // MAGNETAR FIELDS: reset borrow state right before pushing
             (*account_info).borrow_state = 0b_0000_0000;
@@ -190,11 +190,11 @@ pub unsafe fn deserialize<'a, const MAX_ACCOUNTS: usize>(
 
         if duplicate_info == NON_DUP_MARKER {
             let account_info: *mut Account = input.add(offset) as *mut _;
-            offset += std::mem::size_of::<Account>();
+            offset += core::mem::size_of::<Account>();
             offset += (*account_info).data_len as usize;
             offset += MAX_PERMITTED_DATA_INCREASE;
             offset += (offset as *const u8).align_offset(BPF_ALIGN_OF_U128);
-            offset += std::mem::size_of::<u64>(); // MAGNETAR FIELDS: ignore rent epoch
+            offset += core::mem::size_of::<u64>(); // MAGNETAR FIELDS: ignore rent epoch
         } else {
             offset += 8;
         }
@@ -203,7 +203,7 @@ pub unsafe fn deserialize<'a, const MAX_ACCOUNTS: usize>(
     // instruction data
     #[allow(clippy::cast_ptr_alignment)]
     let instruction_data_len = *(input.add(offset) as *const u64) as usize;
-    offset += std::mem::size_of::<u64>();
+    offset += core::mem::size_of::<u64>();
 
     let instruction_data = { from_raw_parts(input.add(offset), instruction_data_len) };
     offset += instruction_data_len;
@@ -248,7 +248,7 @@ pub struct BumpAllocator {
 /// operating on the prescribed `HEAP_START_ADDRESS` and `HEAP_LENGTH`. Any
 /// other use may overflow and is thus unsupported and at one's own risk.
 #[allow(clippy::arithmetic_side_effects)]
-unsafe impl std::alloc::GlobalAlloc for BumpAllocator {
+unsafe impl core::alloc::GlobalAlloc for BumpAllocator {
     #[inline]
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let pos_ptr = self.start as *mut usize;

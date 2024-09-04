@@ -5,7 +5,9 @@ version = "0.0.1"
 edition = "2021"
 
 [features]
+default = []
 macro = ["dep:pinocchio-macro"]
+std = []
 
 [dependencies]
 pinocchio-macro = { version="^0", path="../macro", optional=true }

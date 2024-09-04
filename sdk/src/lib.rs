@@ -8,6 +8,8 @@
 //! [`solana-sdk`]: https://docs.rs/solana-sdk/latest/solana_sdk/
 //! [`solana-program`]: https://docs.rs/solana-program/latest/solana_program/
 
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+
 pub mod account_info;
 pub mod entrypoint;
 pub mod instruction;

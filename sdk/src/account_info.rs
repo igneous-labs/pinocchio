@@ -2,7 +2,7 @@
 
 #![allow(clippy::missing_safety_doc)]
 
-use std::{ptr::NonNull, slice::from_raw_parts_mut};
+use core::{ptr::NonNull, slice::from_raw_parts_mut};
 
 use crate::{program_error::ProgramError, pubkey::Pubkey, syscalls::sol_memset_};
 
@@ -144,7 +144,7 @@ impl AccountInfo {
     #[allow(invalid_reference_casting)]
     pub fn assign(&self, new_owner: &Pubkey) {
         unsafe {
-            std::ptr::write_volatile(&(*self.raw).owner as *const _ as *mut Pubkey, *new_owner);
+            core::ptr::write_volatile(&(*self.raw).owner as *const _ as *mut Pubkey, *new_owner);
         }
     }
 
@@ -353,7 +353,7 @@ impl AccountInfo {
 
     /// Returns the memory address of the account data.
     fn data_ptr(&self) -> *mut u8 {
-        unsafe { (self.raw as *const _ as *mut u8).add(std::mem::size_of::<Account>()) }
+        unsafe { (self.raw as *const _ as *mut u8).add(core::mem::size_of::<Account>()) }
     }
 }
 

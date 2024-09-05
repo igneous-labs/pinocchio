@@ -1,7 +1,5 @@
 // Reference: https://github.com/anza-xyz/agave/blob/e207c6e0eaf8e1657fbfaff07da05ca6a7928349/programs/sbf/rust/ro_modify/src/lib.rs#L105-L129
 
-use core::ptr;
-
 use crate::{
     account_info::AccountInfo, instruction::Instruction, program_error::ProgramError,
     syscalls::sol_invoke_signed_c,
@@ -91,16 +89,17 @@ impl From<&AccountInfo> for SolAccountInfo {
             let len = a.len();
             (len, a.as_ptr())
         };
+        let lamports_addr = unsafe { value.unchecked_borrow_lamports() } as *const _;
         Self {
             key_addr: value.key().as_ptr() as u64,
-            lamports_addr: ptr::from_ref(unsafe { value.unchecked_borrow_lamports() }) as u64,
+            lamports_addr: lamports_addr as u64,
             data_len: data_len as u64,
             data_addr: data_addr as u64,
             owner_addr: value.owner().as_ptr() as u64,
-            rent_epoch: 0, // dont care
             is_signer: value.is_signer(),
             is_writable: value.is_writable(),
             executable: value.executable(),
+            rent_epoch: 0, // dont care
         }
     }
 }

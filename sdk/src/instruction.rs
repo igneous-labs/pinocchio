@@ -32,3 +32,10 @@ pub struct ProcessedSiblingInstruction {
     /// Number of AccountMeta structures
     pub accounts_len: u64,
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct Instruction<'p, 'a, 'd> {
+    pub program_id: &'p [u8; 32],
+    pub accounts: &'a [AccountMeta],
+    pub data: &'d [u8],
+}

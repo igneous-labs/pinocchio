@@ -11,6 +11,7 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
 pub mod account_info;
+pub mod cpi;
 pub mod entrypoint;
 pub mod instruction;
 pub mod log;
